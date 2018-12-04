@@ -21,7 +21,9 @@
 
 1) Download: https://github.com/qalle-fivem/esx-qalle-sellvehicles
 
-2) Add this in your server.cfg :
+2) Import SQL
+
+3) Add this in your server.cfg :
 ``start esx-qalle-sellvehicles``
 
 [SCREENSHOTS]
