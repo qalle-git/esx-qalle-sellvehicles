@@ -69,7 +69,7 @@ function LoadSellPlace()
 				sleepThread = 5
 
 				if dstCheck <= 4.2 then
-					ESX.DrawMarker("[E] Open Menu", 27, SellPos["x"], SellPos["y"], SellPos["z"], 33, 33, 33, 4.0, 4.0)
+					ESX.Game.Utils.DrawText3D(SellPos, "[E] Open Menu", 0.4)
 					if IsControlJustPressed(0, 38) then
 						if IsPedInAnyVehicle(ped, false) then
 							OpenSellMenu(GetVehiclePedIsUsing(ped))
@@ -225,3 +225,11 @@ function SpawnVehicles()
 	end)
 
 end
+
+ESX.LoadModel = function(model)
+	while not HasModelLoaded(model) do
+		RequestModel(model)
+
+		Citizen.Wait(1)
+	end
+end)
