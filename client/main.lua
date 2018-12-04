@@ -210,7 +210,7 @@ function SpawnVehicles()
 
 			local vehicleProps = vehicles[i]["vehProps"]
 
-			ESX.LoadModel(vehicleProps["model"])
+			LoadModel(vehicleProps["model"])
 
 			VehPos[i]["entityId"] = CreateVehicle(vehicleProps["model"], VehPos[i]["x"], VehPos[i]["y"], VehPos[i]["z"], VehPos[i]["h"], false)
 			VehPos[i]["price"] = vehicles[i]["price"]
@@ -226,10 +226,10 @@ function SpawnVehicles()
 
 end
 
-ESX.LoadModel = function(model)
+LoadModel = function(model)
 	while not HasModelLoaded(model) do
 		RequestModel(model)
 
 		Citizen.Wait(1)
 	end
-end)
+end
