@@ -45,7 +45,7 @@ ESX.RegisterServerCallback("esx-qalle-sellvehicles:isVehicleValid", function(sou
 
 		for id, v in pairs(ownedVehicles) do
 
-			if plate == v.plate and #Config.VehiclePositions ~= VehiclesForSale then
+			if Trim(plate) == Trim(v.plate) and #Config.VehiclePositions ~= VehiclesForSale then
                 
                 MySQL.Async.execute("INSERT INTO vehicles_for_sale (seller, vehicleProps, price) VALUES (@sellerIdentifier, @vehProps, @vehPrice)",
                     {
@@ -141,5 +141,13 @@ function UpdateCash(identifier, cash)
 				)
 			end
 		end)
+	end
+end
+
+Trim = function(word)
+	if word ~= nil then
+		return word:match("^%s*(.-)%s*$")
+	else
+		return nil
 	end
 end
