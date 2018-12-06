@@ -92,7 +92,11 @@ ESX.RegisterServerCallback("esx-qalle-sellvehicles:buyVehicle", function(source,
 		TriggerClientEvent("esx-qalle-sellvehicles:refreshVehicles", -1)
 
 		MySQL.Async.fetchAll('SELECT seller FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {}, function(result)
-			UpdateCash(result[1]["seller"], price)
+			if result[1] ~= nil and result[1]["seller"] ~= nil then
+				UpdateCash(result[1]["seller"], price)
+			else
+				print("Something went wrong, there was no car.")
+			end
 		end)
 
 		MySQL.Async.execute('DELETE FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {})
