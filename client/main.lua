@@ -212,7 +212,7 @@ function SpawnVehicles()
 
 			LoadModel(vehicleProps["model"])
 
-			VehPos[i]["entityId"] = CreateVehicle(vehicleProps["model"], VehPos[i]["x"], VehPos[i]["y"], VehPos[i]["z"], VehPos[i]["h"], false)
+			VehPos[i]["entityId"] = CreateVehicle(vehicleProps["model"], VehPos[i]["x"], VehPos[i]["y"], VehPos[i]["z"] - 0.975, VehPos[i]["h"], false)
 			VehPos[i]["price"] = vehicles[i]["price"]
 			VehPos[i]["owner"] = vehicles[i]["owner"]
 
