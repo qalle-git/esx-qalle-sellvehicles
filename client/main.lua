@@ -221,6 +221,7 @@ function SpawnVehicles()
 			FreezeEntityPosition(VehPos[i]["entityId"], true)
 
 			SetEntityAsMissionEntity(VehPos[i]["entityId"], true, true)
+			SetModelAsNoLongerNeeded(vehicleProps["model"])
 		end
 	end)
 
