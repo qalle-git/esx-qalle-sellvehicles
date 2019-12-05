@@ -78,33 +78,40 @@ ESX.RegisterServerCallback("esx-qalle-sellvehicles:buyVehicle", function(source,
 	local price = price
 	local plate = vehProps["plate"]
 
-	if xPlayer.getAccount("bank")["money"] >= price or price == 0 then
-		xPlayer.removeAccountMoney("bank", price)
-
-		MySQL.Async.execute("INSERT INTO owned_vehicles (plate, owner, vehicle) VALUES (@plate, @identifier, @vehProps)",
-			{
-				["@plate"] = plate,
-				["@identifier"] = xPlayer["identifier"],
-				["@vehProps"] = json.encode(vehProps)
-			}
-		)
-
-		TriggerClientEvent("esx-qalle-sellvehicles:refreshVehicles", -1)
-
-		MySQL.Async.fetchAll('SELECT seller FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {}, function(result)
-			if result[1] ~= nil and result[1]["seller"] ~= nil then
-				UpdateCash(result[1]["seller"], price)
+	MySQL.Async.fetchAll('SELECT price FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {}, function(result)
+		if result == price then
+			if xPlayer.getAccount("bank")["money"] >= price or price == 0 then
+				xPlayer.removeAccountMoney("bank", price)
+		
+				MySQL.Async.execute("INSERT INTO owned_vehicles (plate, owner, vehicle, state) VALUES (@plate, @identifier, @vehProps, @State)",
+					{
+						["@plate"] = plate,
+						["@identifier"] = xPlayer["identifier"],
+						["@vehProps"] = json.encode(vehProps),
+						["@State"] = 1
+					}
+				)
+		
+				TriggerClientEvent("esx-qalle-sellvehicles:refreshVehicles", -1)
+		
+				MySQL.Async.fetchAll('SELECT seller FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {}, function(result)
+					if result[1] ~= nil and result[1]["seller"] ~= nil then
+						UpdateCash(result[1]["seller"], price)
+					else
+						print("Something went wrong, there was no car.")
+					end
+				end)
+		
+				MySQL.Async.execute('DELETE FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {})
+		
+				cb(true)
 			else
-				print("Something went wrong, there was no car.")
+				cb(false, xPlayer.getAccount("bank")["money"])
 			end
-		end)
-
-		MySQL.Async.execute('DELETE FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {})
-
-		cb(true)
-	else
-		cb(false, xPlayer.getAccount("bank")["money"])
-	end
+		else
+			DropPlayer(src, "Cheat engine detected") -- Add your anti cheat detection here.
+		end
+	end)
 end)
 
 function RetrievePlayerVehicles(newIdentifier, cb)
