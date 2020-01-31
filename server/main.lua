@@ -81,7 +81,7 @@ ESX.RegisterServerCallback("esx-qalle-sellvehicles:buyVehicle", function(source,
 
 	MySQL.Async.fetchAll('SELECT * FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%" AND vehicleProps LIKE "%' .. model .. '%"', {}, function(result)
 		if result[1] ~= nil then
-			if price == result[1].price then
+			if price == result[1].price or result[1].seller == xPlayer.identifier then
 				if money >= price or price == 0 then
 					xPlayer.removeMoney(price)
 
