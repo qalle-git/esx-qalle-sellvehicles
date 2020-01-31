@@ -134,21 +134,16 @@ end
 function UpdateCash(identifier, cash)
 	local xPlayer = ESX.GetPlayerFromIdentifier(identifier)
 
-	if xPlayer ~= nil then
+	if xPlayer then
 		xPlayer.addAccountMoney("bank", cash)
 
 		TriggerClientEvent("esx:showNotification", xPlayer.source, "Someone bought your vehicle and transferred $" .. cash)
 	else
-		MySQL.Async.fetchAll('SELECT bank FROM users WHERE identifier = @identifier', { ["@identifier"] = identifier }, function(result)
-			if result[1]["bank"] ~= nil then
-				MySQL.Async.execute("UPDATE users SET bank = @newBank WHERE identifier = @identifier",
-					{
-						["@identifier"] = identifier,
-						["@newBank"] = result[1]["bank"] + cash
-					}
-				)
-			end
-		end)
+		MySQL.Async.execute("UPDATE users SET bank = bank + @cash WHERE identifier = @identifier",
+		{
+			["@identifier"] = identifier,
+			["@cash"] = cash
+		})
 	end
 end
 
