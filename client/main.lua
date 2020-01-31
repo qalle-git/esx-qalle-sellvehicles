@@ -168,7 +168,6 @@ function OpenSellMenu(veh, price, buyVehicle, owner)
 		elseif action == "buy" then
 			ESX.TriggerServerCallback("esx-qalle-sellvehicles:buyVehicle", function(isPurchasable, totalMoney)
 				if isPurchasable then
-					DeleteVehicle(veh)
 					ESX.ShowNotification("You ~g~bought~s~ the vehicle for " .. price .. " :-")
 					menu.close()
 				else
@@ -178,7 +177,6 @@ function OpenSellMenu(veh, price, buyVehicle, owner)
 		elseif action == "remove" then
 			ESX.TriggerServerCallback("esx-qalle-sellvehicles:buyVehicle", function(isPurchasable, totalMoney)
 				if isPurchasable then
-					DeleteVehicle(veh)
 					ESX.ShowNotification("You ~g~removed~s~ the vehicle")
 					menu.close()
 				end
@@ -195,9 +193,15 @@ function RemoveVehicles()
 
 	for i = 1, #VehPos, 1 do
 		local veh, distance = ESX.Game.GetClosestVehicle(VehPos[i])
-
+	
 		if DoesEntityExist(veh) and distance <= 1.0 then
-			DeleteEntity(veh)
+			if GetPedInVehicleSeat(veh, -1) ~= 0 then
+				local vehdata = ESX.Game.GetVehicleProperties(veh)
+				NewVehicle(vehdata)
+				DeleteEntity(veh)
+			else
+				DeleteEntity(veh)
+			end
 		end
 	end
 end
@@ -225,6 +229,20 @@ function SpawnVehicles()
 		end
 	end)
 
+end
+
+function NewVehicle(vehdata)
+
+	ESX.Game.SpawnVehicle(vehdata.model, {
+		x = Config.SellPosition["x"] ,
+		y = Config.SellPosition["y"],
+		z = Config.SellPosition["z"]											
+		}, 120.0, function(callback_vehicle)
+		ESX.Game.SetVehicleProperties(callback_vehicle, vehdata)
+		TaskWarpPedIntoVehicle(PlayerPedId(), callback_vehicle, -1)
+		end)
+	SetModelAsNoLongerNeeded(vehdata.model)
+	
 end
 
 LoadModel = function(model)
