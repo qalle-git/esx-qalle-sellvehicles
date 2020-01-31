@@ -74,37 +74,41 @@ end)
 ESX.RegisterServerCallback("esx-qalle-sellvehicles:buyVehicle", function(source, cb, vehProps, price)
 	local src = source
 	local xPlayer = ESX.GetPlayerFromId(src)
-    
 	local price = price
 	local plate = vehProps["plate"]
+	local model = vehProps["model"]
+	local money = xPlayer.getMoney()
 
-	if xPlayer.getAccount("bank")["money"] >= price or price == 0 then
-		xPlayer.removeAccountMoney("bank", price)
+	MySQL.Async.fetchAll('SELECT * FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%" AND vehicleProps LIKE "%' .. model .. '%"', {}, function(result)
+		if result[1] ~= nil then
+			if price == result[1].price or result[1].seller == xPlayer.identifier then
+				if money >= price or price == 0 then
+					xPlayer.removeMoney(price)
 
-		MySQL.Async.execute("INSERT INTO owned_vehicles (plate, owner, vehicle) VALUES (@plate, @identifier, @vehProps)",
-			{
-				["@plate"] = plate,
-				["@identifier"] = xPlayer["identifier"],
-				["@vehProps"] = json.encode(vehProps)
-			}
-		)
+					MySQL.Async.execute("INSERT INTO owned_vehicles (plate, owner, vehicle) VALUES (@plate, @identifier, @vehProps)",
+					{
+						["@plate"] = plate,
+						["@identifier"] = xPlayer.identifier,
+						["@vehProps"] = result[1].vehicleProps
+					})
 
-		TriggerClientEvent("esx-qalle-sellvehicles:refreshVehicles", -1)
+					TriggerClientEvent("esx-qalle-sellvehicles:refreshVehicles", -1)
 
-		MySQL.Async.fetchAll('SELECT seller FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {}, function(result)
-			if result[1] ~= nil and result[1]["seller"] ~= nil then
-				UpdateCash(result[1]["seller"], price)
+					UpdateCash(result[1].seller, price)
+
+					MySQL.Async.execute('DELETE FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {})
+
+					cb(true)
+				else
+					cb(false, money)
+				end
 			else
-				print("Something went wrong, there was no car.")
+				DropPlayer(src, "Cheat engine detected") -- Add your anti cheat detection here.
 			end
-		end)
-
-		MySQL.Async.execute('DELETE FROM vehicles_for_sale WHERE vehicleProps LIKE "%' .. plate .. '%"', {})
-
-		cb(true)
-	else
-		cb(false, xPlayer.getAccount("bank")["money"])
-	end
+		else
+			print("Car not found in sql, possible cheat from : " .. GetPlayerName(src))
+		end
+	end)
 end)
 
 function RetrievePlayerVehicles(newIdentifier, cb)
@@ -130,21 +134,16 @@ end
 function UpdateCash(identifier, cash)
 	local xPlayer = ESX.GetPlayerFromIdentifier(identifier)
 
-	if xPlayer ~= nil then
+	if xPlayer then
 		xPlayer.addAccountMoney("bank", cash)
 
 		TriggerClientEvent("esx:showNotification", xPlayer.source, "Someone bought your vehicle and transferred $" .. cash)
 	else
-		MySQL.Async.fetchAll('SELECT bank FROM users WHERE identifier = @identifier', { ["@identifier"] = identifier }, function(result)
-			if result[1]["bank"] ~= nil then
-				MySQL.Async.execute("UPDATE users SET bank = @newBank WHERE identifier = @identifier",
-					{
-						["@identifier"] = identifier,
-						["@newBank"] = result[1]["bank"] + cash
-					}
-				)
-			end
-		end)
+		MySQL.Async.execute("UPDATE users SET bank = bank + @cash WHERE identifier = @identifier",
+		{
+			["@identifier"] = identifier,
+			["@cash"] = cash
+		})
 	end
 end
 
